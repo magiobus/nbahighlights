@@ -42,16 +42,29 @@ handler.post(async (req, res) => {
 
   // Download youtube video as audio and upload audio to cloudinary
   try {
+    // Get the ID of the youtube video
+    const info = await ytdl.getInfo(url);
+    const videoId = info.videoDetails.videoId;
+    const videoTitle = info.videoDetails.title;
+    const duration = info.videoDetails.lengthSeconds;
+
+    //check if videoId already exists in db
+    const video = await db.collection("videos").findOne({
+      youtubeId: videoId,
+    });
+
+    if (video) {
+      console.error("video already exists in db");
+      res.status(400).end("This video is already in the database");
+      return;
+    }
+
     const audioPath = "./audio.mp3";
     const videoReadableStream = ytdl(url, { filter: "audioonly" });
     const audioWritableStream = fs.createWriteStream(audioPath);
 
     videoReadableStream.pipe(audioWritableStream);
 
-    // Get the ID of the youtube video
-    const info = await ytdl.getInfo(url);
-    const videoId = info.videoDetails.videoId;
-    const videoTitle = info.videoDetails.title;
     console.info("Downloading from YT =>", videoId);
 
     audioWritableStream.on("finish", async () => {
@@ -80,6 +93,7 @@ handler.post(async (req, res) => {
         _id: ObjectId(),
         youtubeId: videoId,
         videoTitle: videoTitle,
+        duration: duration,
         url: url,
         status: status,
         createdAt: dateNowUnix(),
@@ -89,6 +103,7 @@ handler.post(async (req, res) => {
       const jobData = {
         id: id,
         videoId: videoData._id,
+        youtubeId: videoId,
         url: url,
         status: status,
         createdAt: dateNowUnix(),
@@ -102,6 +117,7 @@ handler.post(async (req, res) => {
 
       //prediction is already a json
       // Use JSON.stringify to convert the JSON object to a string before sending it in the response
+
       res.status(200).json({
         jobId: id,
         status: status,

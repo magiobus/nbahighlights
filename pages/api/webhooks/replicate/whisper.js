@@ -4,6 +4,7 @@ import nc from "next-connect";
 import ncoptions from "@/config/ncoptions";
 import { ObjectId } from "mongodb";
 import replicateLib from "@/lib/replicateLib";
+import axios from "axios";
 
 const handler = nc(ncoptions);
 
@@ -79,6 +80,20 @@ handler.post(async (req, res) => {
           },
         }
       );
+
+      //start summary, dont wait for it to finish
+      //it will be done in the background
+      console.info("starting summary in background");
+      const video = await db.collection("videos").findOne({
+        _id: job.videoId,
+      });
+
+      const duration = video.duration;
+
+      axios.get(
+        `${process.env.NGROK_BASE}/api/summarize?youtubeId=${video.youtubeId}&duration=${duration}`
+      );
+
       console.log("whisper finished, video updated");
       res.status(200).end("ok");
     }

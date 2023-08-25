@@ -17,6 +17,7 @@
     "cloudinary": "^1.40.0",
     "daisyui": "^2.19.1",
     "date-fns": "^2.28.0",
+    "fast-xml-parser": "^4.2.7",
     "flatted": "^3.2.7",
     "format-duration": "^3.0.2",
     "heroicons": "^1.0.6",

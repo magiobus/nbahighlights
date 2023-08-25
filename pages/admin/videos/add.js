@@ -38,7 +38,8 @@ const AdminUsersAddPage = () => {
     } catch (error) {
       console.error("error downloading video =>", error);
       setSubmitted(false);
-      toast.error("Error downloading video");
+      const textError = error.response.data || "Error downloading video";
+      toast.error(textError);
     }
     setIsLoading(false);
   };
