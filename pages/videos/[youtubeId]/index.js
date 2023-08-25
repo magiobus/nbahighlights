@@ -57,6 +57,35 @@ export default function VideoPage({ video }) {
                   )}
                 </div>
               </div>
+              {/* Insertion Start */}
+              <div className="highlights my-8">
+                <h3 className="mt-2 text-black text-4xl font-medium">
+                  Highlights
+                </h3>
+                <div className="highlight-list">
+                  {video.highlights && (
+                    <ul className="text-md text-gray-600 mt-2">
+                      {video.highlights.map((highlight, index) => (
+                        <li
+                          key={index}
+                          className="text-blue-500 underline cursor-pointer my-2"
+                          onClick={() =>
+                            window.open(
+                              `https://youtube.com/watch?v=${
+                                video.youtubeId
+                              }&t=${highlight.ts.toFixed(0) - 11}`,
+                              "_blank"
+                            )
+                          }
+                        >
+                          {highlight.text}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+              {/* Insertion End */}
               <div className="searchcontainer w-full flex justify-center items-center "></div>
               <div className="searchcontainer w-full flex justify-center items-center ">
                 <div className="wrapper w-full md:w-1/2">
