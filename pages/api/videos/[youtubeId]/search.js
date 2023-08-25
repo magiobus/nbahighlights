@@ -66,7 +66,7 @@ handler.get(async (req, res) => {
           $group: {
             _id: "$_id",
             upload_date: { $first: "$upload_date" },
-            title: { $first: "$title" },
+            videoTitle: { $first: "$videoTitle" },
             segments: { $push: "$segments" },
             youtubeId: { $first: "$youtubeId" },
             summary: { $first: "$summary" },

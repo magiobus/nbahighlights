@@ -24,6 +24,7 @@ const ShowResults = ({
 
   //functions
   const handleShowVideo = (item, segment) => {
+    console.log("item =>", item);
     setVideo(item);
     setSegment(segment);
     setOpen(true);

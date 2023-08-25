@@ -76,10 +76,11 @@ const VideoSearchPage = ({ query, videoData }) => {
 
       setResults(result);
       setPaginationData({
-        page,
+        transcriptionsCount: resultsCount,
+        segmentsCount: matchesCount,
         pageSize: result.length,
-        totalPages,
-        totalCount: resultsCount,
+        totalPages: Math.ceil(resultsCount / pageSize),
+        page,
       });
     } catch (err) {
       console.log(err);

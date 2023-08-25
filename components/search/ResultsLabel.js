@@ -1,6 +1,8 @@
 const ResultsLabel = ({ paginationData, query }) => {
   if (!paginationData || !paginationData || !query) return null;
 
+  console.log("paginationData =>", paginationData);
+
   const {
     currentSegmentCount,
     transcriptionsCount,
