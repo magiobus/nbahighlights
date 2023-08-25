@@ -88,13 +88,19 @@ handler.post(async (req, res) => {
         _id: job.videoId,
       });
 
-      const duration = video.duration;
-
+      //summary
       axios.get(
-        `${process.env.NGROK_BASE}/api/summarize?youtubeId=${video.youtubeId}&duration=${duration}`
+        `${process.env.NGROK_BASE}/api/summarize?youtubeId=${video.youtubeId}`
       );
 
-      console.log("whisper finished, video updated");
+      //highlights
+      axios.get(
+        `${process.env.NGROK_BASE}/api/highlights?youtubeId=${video.youtubeId}`
+      );
+
+      console.log(
+        "whisper finished, video updated and summary/highlights started in the background"
+      );
       res.status(200).end("ok");
     }
   } catch (error) {
