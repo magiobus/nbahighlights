@@ -9,17 +9,6 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/router";
 import { CheckCircleIcon } from "@heroicons/react/outline";
 
-const roleOptions = [
-  {
-    value: "user",
-    label: "User",
-  },
-  {
-    value: "user,admin",
-    label: "Admin",
-  },
-];
-
 const AdminUsersAddPage = () => {
   const {
     register,
@@ -36,24 +25,9 @@ const AdminUsersAddPage = () => {
   const onSubmit = async (data) => {
     try {
       setIsLoading(true);
-      const video = data.video[0];
-      const formData = new FormData();
-      formData.append("file", video);
-      formData.append("upload_preset", "fullgamevideo"); // replace with your upload_preset
+      const videoUrl = data.videoUrl;
 
-      const { data: videoData } = await axios.post(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUDNAME}/video/upload`, // replace with your cloud name
-        formData
-      );
-
-      const videoUrl = videoData.secure_url;
-      console.log("videoUrl =>", videoUrl);
-      if (!videoUrl) {
-        setSubmitted(false);
-        throw new Error("Failed to upload video");
-      }
-
-      //send videourl to api on vercel to start transcribing on replicate
+      //send videoUrl to node.js to download only the audio of the video
       const response = await axios.post(`/api/admin/videos/transcribe`, {
         url: videoUrl,
       });
@@ -62,9 +36,9 @@ const AdminUsersAddPage = () => {
 
       setSubmitted(true);
     } catch (error) {
-      console.error("error uploading video =>", error);
+      console.error("error downloading video =>", error);
       setSubmitted(false);
-      toast.error("Error uploading video");
+      toast.error("Error downloading video");
     }
     setIsLoading(false);
   };
@@ -97,26 +71,25 @@ const AdminUsersAddPage = () => {
                         {!isLoading && !submitted && (
                           <>
                             <p className="mb-2">
-                              Upload a video to be processed by the nbaSearch AI
-                              🏀
+                              Enter a YouTube link to be processed by the
+                              nbaSearch AI 🏀
                             </p>
                             <div className="mb-4">
                               <label
                                 className="block text-gray-700 text-sm font-bold mb-2"
-                                htmlFor="video"
+                                htmlFor="videoUrl"
                               >
-                                Video
+                                YouTube Link
                               </label>
                               <input
                                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                id="video"
-                                type="file"
-                                accept="video/*"
-                                {...register("video", { required: true })}
+                                id="videoUrl"
+                                type="text"
+                                {...register("videoUrl", { required: true })}
                               />
-                              {errors.video && (
+                              {errors.videoUrl && (
                                 <p className="text-red-500 text-xs italic">
-                                  Please choose a video.
+                                  Please enter a YouTube link.
                                 </p>
                               )}
                             </div>
@@ -126,30 +99,30 @@ const AdminUsersAddPage = () => {
                                 type="submit"
                                 disabled={isLoading}
                               >
-                                Upload
+                                Process
                               </button>
                             </div>
                           </>
                         )}
                       </form>
 
-                      {/* //uploading video */}
+                      {/* //processing video */}
                       {isLoading && !submitted && (
                         <div className="w-full flex justify-center items-center">
                           <div className="py-24 flex ">
                             <LoadingCircle color="#000000" />
-                            <p>Uploading video...</p>
+                            <p>Processing video...</p>
                             <p>This process can take a few minutes</p>
                           </div>
                         </div>
                       )}
 
-                      {/* //video uploaded */}
+                      {/* //video processed */}
                       {!isLoading && submitted && (
                         <div className="w-full flex flex-col justify-center items-center">
                           <div className="pt-24 flex flex-col">
                             <CheckCircleIcon className="h-12 w-12 text-green-500 mx-auto mb-2" />
-                            <p className="">Video successfully uploaded</p>
+                            <p className="">Video successfully processed</p>
                           </div>
                           <div className=" flex flex-col">
                             <p className="">

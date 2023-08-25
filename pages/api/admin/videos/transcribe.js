@@ -5,7 +5,10 @@ import clientPromise from "@/lib/mongodb";
 import ncoptions from "@/config/ncoptions";
 import { dateNowUnix } from "@/utils/dates";
 import replicate from "@/lib/replicateLib";
+import ytdl from "ytdl-core"; // to download youtube video as audio
+import cloudinary from "cloudinary"; // to upload audio to cloudinary
 const { ObjectId } = require("mongodb");
+const fs = require("fs");
 
 const handler = nc(ncoptions);
 
@@ -29,7 +32,7 @@ handler.post(async (req, res) => {
   const db = req.db;
   const { url } = req.body;
 
-  console.log("url, we re in=>", url);
+  console.log("youtube, url=>", url);
 
   if (!url) {
     console.error("no url provided");
@@ -37,43 +40,80 @@ handler.post(async (req, res) => {
     return;
   }
 
-  //send to replicate to start transcirbing using  whisper....
-  const prediction = await replicate.startWhisperJob({
-    url,
-    webhookUrl: `${process.env.NGROK_BASE}/api/webhooks/replicate/whisper`,
-  });
+  // Download youtube video as audio and upload audio to cloudinary
+  try {
+    const audioPath = "./audio.mp3";
+    const videoReadableStream = ytdl(url, { filter: "audioonly" });
+    const audioWritableStream = fs.createWriteStream(audioPath);
 
-  const { id, status } = prediction;
+    videoReadableStream.pipe(audioWritableStream);
 
-  console.log("prediction =>", prediction);
+    // Get the ID of the youtube video
+    const info = await ytdl.getInfo(url);
+    const videoId = info.videoDetails.videoId;
+    const videoTitle = info.videoDetails.title;
+    console.info("Downloading from YT =>", videoId);
 
-  const videoData = {
-    _id: ObjectId(),
-    url: url,
-    status: status,
-    createdAt: dateNowUnix(),
-    createdBy: req.sessionUser.email,
-  };
+    audioWritableStream.on("finish", async () => {
+      console.info("uploading audio to cloudinary");
+      const result = await cloudinary.v2.uploader.upload(audioPath, {
+        public_id: videoId,
+        resource_type: "video",
+        chunk_size: 6000000,
+        folder: "fullgamevideos",
+      });
 
-  const jobData = {
-    id: id,
-    videoId: videoData._id,
-    url: url,
-    status: status,
-    createdAt: dateNowUnix(),
-    createdBy: req.sessionUser.email,
-  };
+      const url = result.url;
 
-  //save in mongodb the job and the video
-  await db.collection("jobs").insertOne(jobData);
-  await db.collection("videos").insertOne(videoData);
+      fs.unlinkSync(audioPath); // delete local audio file
 
-  //prediction is already a json
-  // Use JSON.stringify to convert the JSON object to a string before sending it in the response
-  res.status(200).json({
-    jobId: id,
-    status: status,
-  });
+      //send to replicate to start transcirbing using  whisper....
+      console.info("starting prediction job in replicate");
+      const prediction = await replicate.startWhisperJob({
+        url, // use the cloudinary url
+        webhookUrl: `${process.env.NGROK_BASE}/api/webhooks/replicate/whisper`,
+      });
+
+      const { id, status } = prediction;
+
+      const videoData = {
+        _id: ObjectId(),
+        youtubeId: videoId,
+        videoTitle: videoTitle,
+        url: url,
+        status: status,
+        createdAt: dateNowUnix(),
+        createdBy: req.sessionUser.email,
+      };
+
+      const jobData = {
+        id: id,
+        videoId: videoData._id,
+        url: url,
+        status: status,
+        createdAt: dateNowUnix(),
+        createdBy: req.sessionUser.email,
+      };
+
+      //save in mongodb the job and the video
+      await db.collection("jobs").insertOne(jobData);
+      await db.collection("videos").insertOne(videoData);
+      console.info("job and video saved in db");
+
+      //prediction is already a json
+      // Use JSON.stringify to convert the JSON object to a string before sending it in the response
+      res.status(200).json({
+        jobId: id,
+        status: status,
+      });
+    });
+
+    return;
+  } catch (error) {
+    console.error("Error downloading and uploading audio:", error);
+    res.status(500).end("Error downloading and uploading audio");
+    return;
+  }
 });
 
 export default handler;
