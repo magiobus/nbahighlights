@@ -8,11 +8,10 @@ import YoutubeIframe from "@/components/common/YoutubeIframe";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useSession } from "next-auth/react";
-import ShareButtons from "@/components/search/ShareButtons";
 
 const ShowResults = ({
   data = [],
-  query = "la busqueda",
+  query = "search query",
   showVideoSearchButton = true,
 }) => {
   //hooks
@@ -24,7 +23,6 @@ const ShowResults = ({
   const [segment, setSegment] = useState(null);
 
   //functions
-
   const handleShowVideo = (item, segment) => {
     setVideo(item);
     setSegment(segment);
@@ -66,22 +64,6 @@ const ShowResults = ({
                   <p className="mt-1">
                     <strong> Minute:</strong> {format(segment?.start * 1000)}
                   </p>
-
-                  <p className="mt-1 text-left text-xs font-medium italic">
-                    Date: {video?.upload_date}
-                  </p>
-                  {/* //should only appear if the plan is pro */}
-                  <div className="sharebuttons space-x-2">
-                    <ShareButtons
-                      shareUrl={`https://www.youtube.com/watch?v=${
-                        video?.youtubeId
-                      }&t=${segment?.start?.toFixed(
-                        0
-                      )}s found on nbahighlights.fun by @magiobus`}
-                      sharedMessage={`"${segment?.text}"`}
-                      centered={true}
-                    />
-                  </div>
                 </div>
               </div>
             </div>
@@ -97,13 +79,8 @@ const ShowResults = ({
             <div className="resultitem__title pt-2 text-left  text-sm">
               <strong>Video:</strong>{" "}
               <a href={item.url} className="italic underline">
-                {item.filename}
+                {item.videoTitle}
               </a>
-            </div>
-            <div className="date">
-              <p className="mt-1 text-left text-xs">
-                <strong>Date:</strong> {item.upload_date}
-              </p>
             </div>
 
             <div className="segments my-3">

@@ -14,7 +14,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import clientPromise from "@/lib/mongodb";
 
-const VideoSearchPage = ({ query, podcastData }) => {
+const VideoSearchPage = ({ query, videoData }) => {
   const { data: session } = useSession();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -42,10 +42,13 @@ const VideoSearchPage = ({ query, podcastData }) => {
 
   //get info from query
   useEffect(() => {
-    if (podcastData) {
+    if (query) {
       getQueryResults({
         query: query,
-        channelTag: podcastData.channel_tag,
+        page: page,
+        limit: pageSize,
+        sort: sortBy,
+        order: orderBy,
       });
     }
   }, [query, page]);
@@ -61,49 +64,31 @@ const VideoSearchPage = ({ query, podcastData }) => {
     setResults([]);
   };
 
-  const getQueryResults = async ({ query, channelTag }) => {
+  const getQueryResults = async ({ query, page, limit, sort, order }) => {
     setIsLoading(true);
     try {
       cleanData();
       //edit area
-      const { data } = await axios.post(`/api/search/${channelTag}`, {
-        query: query,
-        page: page,
-        limit: pageSize,
-        sort: sortBy,
-        order: orderBy,
-      });
+      const { data } = await axios.get(
+        `/api/videos/${videoData.youtubeId}/search/?query=${query}&page=${page}&limit=${limit}&sort=${sort}&order=${order}`
+      );
+      const { resultsCount, result, matchesCount } = data;
 
-      const { results, totalPages, transcriptionsCount, segmentsCount } = data;
-      setResults(results);
-
-      //count the total number of segments
-      const currentSegmentCount = results.reduce((acc, curr) => {
-        return acc + curr.segments.length;
-      }, 0);
-
+      setResults(result);
       setPaginationData({
         page,
-        pageSize: results.length,
+        pageSize: result.length,
         totalPages,
-        totalCount: transcriptionsCount,
-        transcriptionsCount,
-        segmentsCount,
-        currentSegmentCount,
+        totalCount: resultsCount,
       });
-    } catch (error) {
-      console.error("error =>", error);
-      toast.error("Error searching on nbahighlights.fun");
+    } catch (err) {
+      console.log(err);
     }
     setIsLoading(false);
   };
 
   return (
-    <VideoLayout
-      title={podcastData.channel_tag}
-      description={`Search anything on @${podcastData.channel_tag} podcast. Results brought to you by nbahighligts.fun`}
-      podcast={podcastData}
-    >
+    <VideoLayout title={videoData.videoTitle} video={videoData}>
       <div className="content my-8 flex w-full items-center justify-center">
         <div
           id="videocontainer"
@@ -159,32 +144,30 @@ const VideoSearchPage = ({ query, podcastData }) => {
 };
 
 export async function getServerSideProps(context) {
-  const { channelTag } = context.params;
+  const { youtubeId } = context.params;
   const { query } = context.query;
 
-  //get podcast info from db
+  //get video info from db
   const client = await clientPromise;
   const db = await client.db();
 
-  const podcast = await db.collection("podcastsinfo").findOne({
-    channel_tag: channelTag,
+  const video = await db.collection("videos").findOne({
+    youtubeId,
   });
 
-  if (!podcast) {
+  if (!video) {
     return {
       notFound: true,
     };
   }
 
-  const podcastParsed = JSON.parse(JSON.stringify(podcast));
+  const videoParsed = JSON.parse(JSON.stringify(video));
 
   return {
     props: {
-      channelTag,
       query,
-      podcastData: podcastParsed,
+      videoData: videoParsed,
     },
   };
 }
-
 export default VideoSearchPage;

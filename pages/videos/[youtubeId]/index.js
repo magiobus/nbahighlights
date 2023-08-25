@@ -31,6 +31,12 @@ export default function VideoPage({ video }) {
                 </a>
               </div>
 
+              <div className="searchcontainer w-full flex justify-center items-center ">
+                <div className="wrapper w-full w-10/12">
+                  <SearchForm video={video} youtubeId={video.youtubeId} />
+                </div>
+              </div>
+
               <div className="summary my-8">
                 <h3 className="mt-2 text-black text-4xl font-medium">
                   Summary
@@ -83,13 +89,6 @@ export default function VideoPage({ video }) {
                       ))}
                     </ul>
                   )}
-                </div>
-              </div>
-              {/* Insertion End */}
-              <div className="searchcontainer w-full flex justify-center items-center "></div>
-              <div className="searchcontainer w-full flex justify-center items-center ">
-                <div className="wrapper w-full md:w-1/2">
-                  {/* <SearchForm podcast={podcast} /> */}
                 </div>
               </div>
             </div>

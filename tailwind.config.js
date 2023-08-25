@@ -6,7 +6,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        buttonbg: "#291f9e",
+        buttonbg: "#244b88",
         buttontxt: "#ffffff",
         selectedtxt: "#291f9e",
         inputfocus: "#291f9e",

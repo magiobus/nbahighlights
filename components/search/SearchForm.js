@@ -11,11 +11,11 @@ import { useSession } from "next-auth/react";
 
 const SearchForm = ({
   type = "col",
-  placeholder = "Type your search here...",
-  podcast,
+  placeholder = "Type your search",
   text = "",
+  youtubeId = "",
 }) => {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -29,7 +29,14 @@ const SearchForm = ({
     if (text) {
       setValue("query", text);
     }
-  }, [text]);
+  }, []);
+
+  //showing toast in row type
+  useEffect(() => {
+    if (errors.query && type !== "col") {
+      toast.error(errors.query.message);
+    }
+  }, [errors]);
 
   //check if user can search
   const handleOutSearches = () => {
@@ -42,18 +49,24 @@ const SearchForm = ({
   };
 
   const onSubmit = async (data) => {
-    // //redirect to search page with params
+    //redirect to search page with params
     setIsLoading(true);
     const { query } = data;
+    //before sending to new location, we need to track how many searches the not logged in user has made, maybe we can use localstorage for this
     const canSearch = handleOutSearches();
     if (!canSearch) {
       //send to login page with nextauth redirect
-      console.info("redirecting...");
-      window.location.href = `/auth/signin?redirect=${window.location.origin}/podcasts/${podcast.channel_tag}/search?query=${query}`;
+      window.location.href = `/auth/signin?redirect=${window.location.origin}/search?query=${query}`;
       return;
     }
-    // //send to search page
-    window.location.href = `/podcasts/${podcast.channel_tag}/search?query=${query}`;
+
+    if (youtubeId) {
+      window.location.href = `/videos/${youtubeId}/search?query=${query}`;
+      return;
+    }
+
+    //send to search page
+    window.location.href = `/search?query=${query}`;
   };
 
   return (
@@ -71,23 +84,14 @@ const SearchForm = ({
       >
         {type !== "col" && (
           <div className="flex items-center justify-center">
-            {podcast && podcast.channelProfileUrl && (
-              <Link href="/">
-                <a>
-                  <div className="logo mr-4 w-12">
-                    <Image
-                      src={podcast.channelProfileUrl}
-                      width={470}
-                      height={470}
-                      alt="podcast_logo"
-                      className="rounded-full"
-                    />
-                  </div>
-                </a>
-              </Link>
-            )}
+            <Link href="/">
+              <a>
+                <div className="logo mr-4 w-12"> 🏀</div>
+              </a>
+            </Link>
           </div>
         )}
+
         <div
           className={classNames(
             type === "col" ? "my-4 w-full" : "my-0 mr-2 p-0 ",
@@ -110,11 +114,11 @@ const SearchForm = ({
               ...register("query", {
                 required: {
                   value: true,
-                  message: "Por favor ingresa una busqueda",
+                  message: "Please enter a search term",
                 },
                 maxLength: {
                   value: 38,
-                  message: "No puede contener más de 38 caracteres",
+                  message: "Please enter a search term less than 38 characters",
                 },
               }),
             }}
@@ -138,7 +142,7 @@ const SearchForm = ({
               label={
                 <div className="flex items-center justify-center">
                   {type === "col" ? (
-                    "Search on " + podcast.youtubeChannelName
+                    "Search"
                   ) : (
                     <SearchIcon className="h-6 w-6" />
                   )}
