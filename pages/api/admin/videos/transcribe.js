@@ -47,6 +47,7 @@ handler.post(async (req, res) => {
     const videoId = info.videoDetails.videoId;
     const videoTitle = info.videoDetails.title;
     const duration = info.videoDetails.lengthSeconds;
+    const thumbnail = info.videoDetails.thumbnails[0].url;
 
     //check if videoId already exists in db
     const video = await db.collection("videos").findOne({
@@ -93,6 +94,7 @@ handler.post(async (req, res) => {
         _id: ObjectId(),
         youtubeId: videoId,
         videoTitle: videoTitle,
+        thumbnail: thumbnail,
         duration: duration,
         url: url,
         status: status,

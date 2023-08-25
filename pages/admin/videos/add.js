@@ -32,8 +32,6 @@ const AdminUsersAddPage = () => {
         url: videoUrl,
       });
 
-      console.log("response ok =>", response.data);
-
       setSubmitted(true);
     } catch (error) {
       console.error("error downloading video =>", error);
@@ -45,7 +43,7 @@ const AdminUsersAddPage = () => {
   };
 
   return (
-    <AdminLayout title="Usuarios">
+    <AdminLayout title="Add a Video">
       <div className="w-full flex justify-center">
         <div className="relative bg-white w-full ">
           <div>
@@ -112,7 +110,7 @@ const AdminUsersAddPage = () => {
                         <div className="w-full flex justify-center items-center">
                           <div className="py-24 flex ">
                             <LoadingCircle color="#000000" />
-                            <p>Processing video...</p>
+                            <p>Downloading video...</p>
                             <p>This process can take a few minutes</p>
                           </div>
                         </div>
@@ -123,7 +121,7 @@ const AdminUsersAddPage = () => {
                         <div className="w-full flex flex-col justify-center items-center">
                           <div className="pt-24 flex flex-col">
                             <CheckCircleIcon className="h-12 w-12 text-green-500 mx-auto mb-2" />
-                            <p className="">Video successfully processed</p>
+                            <p className="">Video successfully downloaded</p>
                           </div>
                           <div className=" flex flex-col">
                             <p className="">
